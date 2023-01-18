@@ -1,6 +1,9 @@
 const {model: srvc} = require('../../service');
 const {BadRequest, Conflict} = require('http-errors');
+const {v4: uuidv4} = require('uuid');
 const gravatar = require('gravatar');
+
+const sendMsg = require('../../helpers/sendMsg');
 
 const register = async (req, res, next) => {
     try {
@@ -13,14 +16,25 @@ const register = async (req, res, next) => {
       const {email, password} = req.body;
 
       const userEmail = await srvc.authModel.User.findOne({email});
+      
       if(userEmail){
         throw new Conflict('Email in use');
       };
       
       const avatarURL = gravatar.url(email);
-      const newUser = new srvc.authModel.User({email, password, avatarURL});
+      const verificationToken = uuidv4();
+
+      const newUser = new srvc.authModel.User({email, password, avatarURL, verificationToken});
       newUser.setPassword(password);
-      newUser.save();
+      await newUser.save();
+
+      const message = {
+        to: email,
+        subject: 'Email verification',
+        html: `<a target='_blank' href='http://Localhost:3000/api/users/verify/${verificationToken}'>Confirm email</a>`
+      };
+
+      await sendMsg(message);
 
       res.status(201).json({
       status: 'success',
