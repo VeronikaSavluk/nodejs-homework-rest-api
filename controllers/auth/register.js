@@ -1,8 +1,8 @@
-const {model: srvc} = require('../../service');
 const {BadRequest, Conflict} = require('http-errors');
 const {v4: uuidv4} = require('uuid');
 const gravatar = require('gravatar');
 
+const {model: srvc} = require('../../service');
 const sendMsg = require('../../helpers/sendMsg');
 
 const register = async (req, res, next) => {
@@ -28,13 +28,7 @@ const register = async (req, res, next) => {
       newUser.setPassword(password);
       await newUser.save();
 
-      const message = {
-        to: email,
-        subject: 'Email verification',
-        html: `<a target='_blank' href='http://Localhost:3000/api/users/verify/${verificationToken}'>Confirm email</a>`
-      };
-
-      await sendMsg(message);
+      await sendMsg(email, verificationToken);
 
       res.status(201).json({
       status: 'success',
