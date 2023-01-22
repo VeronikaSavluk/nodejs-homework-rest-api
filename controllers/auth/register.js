@@ -1,6 +1,9 @@
-const {model: srvc} = require('../../service');
 const {BadRequest, Conflict} = require('http-errors');
+const {v4: uuidv4} = require('uuid');
 const gravatar = require('gravatar');
+
+const {model: srvc} = require('../../service');
+const sendMsg = require('../../helpers/sendMsg');
 
 const register = async (req, res, next) => {
     try {
@@ -13,14 +16,19 @@ const register = async (req, res, next) => {
       const {email, password} = req.body;
 
       const userEmail = await srvc.authModel.User.findOne({email});
+      
       if(userEmail){
         throw new Conflict('Email in use');
       };
       
       const avatarURL = gravatar.url(email);
-      const newUser = new srvc.authModel.User({email, password, avatarURL});
+      const verificationToken = uuidv4();
+
+      const newUser = new srvc.authModel.User({email, password, avatarURL, verificationToken});
       newUser.setPassword(password);
-      newUser.save();
+      await newUser.save();
+
+      await sendMsg(email, verificationToken);
 
       res.status(201).json({
       status: 'success',
