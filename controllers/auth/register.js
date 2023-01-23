@@ -5,6 +5,8 @@ const gravatar = require('gravatar');
 const {model: srvc} = require('../../service');
 const sendMsg = require('../../helpers/sendMsg');
 
+const verificationToken = uuidv4();
+
 const register = async (req, res, next) => {
     try {
       const {error} = await srvc.authModel.joiSchema.validate(req.body);
@@ -22,8 +24,7 @@ const register = async (req, res, next) => {
       };
       
       const avatarURL = gravatar.url(email);
-      const verificationToken = uuidv4();
-
+      
       const newUser = new srvc.authModel.User({email, password, avatarURL, verificationToken});
       newUser.setPassword(password);
       await newUser.save();
@@ -46,4 +47,7 @@ const register = async (req, res, next) => {
     };
   };
 
-  module.exports = register;
+  module.exports = {
+    register,
+    verificationToken
+  };
