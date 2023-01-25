@@ -26,8 +26,9 @@ jest.fn('bcrypt');
 // const hashPassword = bcrypt.hashSync(reqInput.password, bcrypt.genSaltSync(10));
 
 describe("test auth route", () => {		  
+	let server;
 	beforeAll(() => {
-		connect(DB_TEST_HOST)
+		server = connect(DB_TEST_HOST)
 		.then(() => {
 			app.listen(PORT);
 		})
@@ -40,6 +41,7 @@ describe("test auth route", () => {
 	afterAll(async() => {
 		const {_id} = await User.findOne({email: reqInput.email});
 		await User.deleteOne({_id});
+		server.close();
 		})
 	
 		describe('test register controller', () => {
